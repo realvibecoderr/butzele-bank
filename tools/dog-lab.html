@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dackel-Labor</title>
+<style>
+  body { margin: 0; padding: 16px; background: #F6ECE1; font: 600 14px/1.4 system-ui, sans-serif; color: #2B1B12; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+  .cell { background: #FCE7D2; border-radius: 16px; padding: 10px; }
+  .cell.m4 { background: linear-gradient(165deg, #FFE9A6, #FFC9B5); }
+  .cell.m3 { background: linear-gradient(165deg, #FFEDB8, #F6CF86); }
+  .cell.m1 { background: linear-gradient(165deg, #E1E7F0, #BFCBDC); }
+  .cell.m0 { background: linear-gradient(165deg, #A9B5C9, #7D8AA3); color: #fff; }
+  canvas { width: 312px; height: 180px; image-rendering: pixelated; display: block; }
+  .big .grid { grid-template-columns: 1fr; }
+  .big .grid canvas { width: 624px; height: 360px; }
+  button { margin: 2px; }
+  #icons canvas { width: auto; height: auto; image-rendering: auto; display: inline-block; margin: 8px; border-radius: 22%; }
+</style>
+</head>
+<body>
+<h1>Dackel-Labor</h1>
+<div class="grid" id="g"></div>
+<h2>Icons</h2>
+<div id="icons"></div>
+<script src="../js/dog.js"></script>
+<script>
+  if (location.search.includes('big')) document.body.classList.add('big');
+  const names =['Sehr traurig', 'Traurig', 'Zufrieden', 'Glücklich', 'Überglücklich'];
+  window.dogs = [];
+  for (let m = 4; m >= 0; m--) {
+    const c = document.createElement('div'); c.className = 'cell m' + m;
+    c.innerHTML = `<b>${m} · ${names[m]}</b><canvas></canvas>
+      <button data-k="deposit">Einzahlung</button><button data-k="expense">Ausgabe</button>
+      <button data-k="pet">Streicheln</button><button data-k="party">Party</button>`;
+    document.getElementById('g').appendChild(c);
+    const d = new Butzele.Dog(c.querySelector('canvas'));
+    d.setMood(m); dogs[m] = d;
+    c.addEventListener('click', (e) => { const k = e.target.dataset.k; if (k) d.react(k, { big: true }); });
+  }
+
+  // App-Icons: Kopf in Großaufnahme auf warmem Hintergrund
+  function icon(size, rounded) {
+    const snap = Butzele.snapshot({ eyes: 'happy', mouth: 'tongue', tongue: 4, blush: true, tailA: -2.0 });
+    const src = document.createElement('canvas'); src.width = Butzele.W; src.height = Butzele.H;
+    snap.paint(src.getContext('2d'));
+    const c = document.createElement('canvas'); c.width = c.height = size;
+    const x = c.getContext('2d');
+    const grd = x.createLinearGradient(0, 0, 0, size);
+    grd.addColorStop(0, '#FFD98A'); grd.addColorStop(1, '#F6A96B');
+    x.fillStyle = grd; x.fillRect(0, 0, size, size);
+    // Ausschnitt: Kopf, Ohr, Halsband
+    const sx = 53, sy = 15, sw = 32, sh = 32;
+    const scale = Math.floor(size * 0.86 / sw);
+    const dw = sw * scale, dh = sh * scale;
+    x.imageSmoothingEnabled = false;
+    x.drawImage(src, sx, sy, sw, sh, Math.round((size - dw) / 2), Math.round(size - dh + scale * 2), dw, dh);
+    return c;
+  }
+  window.makeIcon = icon;
+  const box = document.getElementById('icons');
+  [180, 192, 512].forEach((s) => box.appendChild(icon(s)));
+</script>
+</body>
+</html>
